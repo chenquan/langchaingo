@@ -219,9 +219,19 @@ func (s Store) AddDocuments(ctx context.Context, docs []schema.Document,
 	textCol := entity.NewColumnVarChar(s.textField, texts)
 	metaCol := entity.NewColumnVarChar(s.metaField, metadatas)
 	vectorCol := entity.NewColumnFloatVector(s.vectorField, len(vectors[0]), vectors)
-	_, err = s.client.Insert(ctx, s.collectionName, s.partitionName, vectorCol, metaCol, textCol)
+	column, err := s.client.Insert(ctx, s.collectionName, s.partitionName, vectorCol, metaCol, textCol)
 	if err != nil {
 		return nil, err
+	}
+
+	if col, ok := column.(*entity.ColumnInt64); ok {
+		data := col.Data()
+		ids := make([]string, 0, len(data))
+		for _, v := range data {
+			formatInt := strconv.FormatInt(v, 10)
+			ids = append(ids, formatInt)
+		}
+		return ids, nil
 	}
 
 	return nil, nil
