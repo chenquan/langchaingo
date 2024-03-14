@@ -224,17 +224,18 @@ func (s Store) AddDocuments(ctx context.Context, docs []schema.Document,
 		return nil, err
 	}
 
-	if col, ok := column.(*entity.ColumnInt64); ok {
-		data := col.Data()
-		ids := make([]string, 0, len(data))
-		for _, v := range data {
-			formatInt := strconv.FormatInt(v, 10)
-			ids = append(ids, formatInt)
-		}
-		return ids, nil
+	col, ok := column.(*entity.ColumnInt64)
+	if !ok {
+		return nil, fmt.Errorf("%w: invalid id column", ErrColumnNotFound)
 	}
 
-	return nil, nil
+	data := col.Data()
+	ids := make([]string, 0, len(data))
+	for _, v := range data {
+		ids = append(ids, strconv.FormatInt(v, 10))
+	}
+
+	return ids, nil
 }
 
 func (s *Store) getSearchFields() []string {
